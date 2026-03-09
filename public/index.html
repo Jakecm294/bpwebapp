@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>British Powerlifting Entry List</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">British Powerlifting</p>
+          <h1>Entry list</h1>
+          <p class="subtle">
+            Cached Sport80 entries with OpenIPF totals in a simpler event-style view.
+          </p>
+        </div>
+        <button id="refreshButton" class="primary" type="button">Refresh data</button>
+      </header>
+
+      <section class="summary-card">
+        <div class="summary-copy">
+          <p class="section-label">Current selection</p>
+          <h2 id="tableTitle">Entries</h2>
+          <p id="tableSummary" class="subtle">Fetching data...</p>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-item">
+            <span class="status-label">Last refresh</span>
+            <strong id="updatedAt">Loading...</strong>
+          </div>
+          <div class="summary-item">
+            <span class="status-label">Visible records</span>
+            <strong id="entryCount">0</strong>
+          </div>
+          <div class="summary-item summary-item-wide">
+            <span class="status-label">Cache</span>
+            <strong id="cacheState">Loading cache status...</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="filters-card">
+        <div class="field">
+          <label for="classSelect">Weight class</label>
+          <select id="classSelect"></select>
+        </div>
+        <div class="field field-search">
+          <label for="searchInput">Search name or club</label>
+          <input id="searchInput" type="search" placeholder="Search entries" />
+        </div>
+      </section>
+
+      <section class="classes-card">
+        <div class="section-heading">
+          <h2>Weight classes</h2>
+          <p class="subtle">Jump straight to a class.</p>
+        </div>
+        <div id="classButtons" class="pill-grid"></div>
+      </section>
+
+      <section class="table-card">
+        <div id="message" class="message hidden"></div>
+        <div class="table-wrap">
+          <table class="entries-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Club</th>
+                <th>Best Total</th>
+                <th>Last Full Power Total</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <div id="disambiguationModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-panel">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">OpenIPF Match</p>
+            <h2 id="disambiguationTitle">Resolve lifter</h2>
+          </div>
+          <button id="closeDisambiguationButton" class="secondary" type="button">Close</button>
+        </div>
+        <p id="disambiguationIntro" class="modal-copy"></p>
+        <div id="disambiguationMessage" class="message hidden"></div>
+        <div id="disambiguationCandidates" class="modal-candidates"></div>
+        <div class="modal-actions">
+          <div class="modal-input-group">
+            <label for="disambiguationNumber">Disambiguation number</label>
+            <input id="disambiguationNumber" type="number" min="1" placeholder="Enter the number, for example 1" />
+          </div>
+          <button id="saveDisambiguationButton" class="primary" type="button">Save selection</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="manualUrlModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-panel modal-panel-narrow">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">OpenIPF URL</p>
+            <h2 id="manualUrlTitle">Set correct profile URL</h2>
+          </div>
+          <button id="closeManualUrlButton" class="secondary" type="button">Close</button>
+        </div>
+        <p id="manualUrlIntro" class="modal-copy"></p>
+        <div id="manualUrlMessage" class="message hidden"></div>
+        <div class="manual-url-grid">
+          <div>
+            <span class="status-label">Guessed URL</span>
+            <p id="manualUrlGuessed" class="modal-copy mono"></p>
+          </div>
+          <div>
+            <label for="manualUrlInput">Correct OpenIPF URL</label>
+            <input id="manualUrlInput" type="url" placeholder="https://www.openipf.org/u/examplelifter" />
+          </div>
+        </div>
+        <div class="modal-actions single-action">
+          <button id="saveManualUrlButton" class="primary" type="button">Save URL</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+  </html>

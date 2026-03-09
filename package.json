@@ -1,0 +1,20 @@
+{
+  "name": "bp-web-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local web app for browsing British Powerlifting entries without Google Sheets limits",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "refresh": "node server.js --refresh-only"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "node-fetch": "^2.7.0",
+    "pg": "^8.20.0"
+  }
+}

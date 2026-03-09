@@ -1,0 +1,4 @@
+node_modules/
+data/cache.json
+data/openipf-cache.json
+data/openipf-overrides.json
