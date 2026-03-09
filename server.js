@@ -52,6 +52,9 @@ let overridePool = null;
 const openIpfRequests = new Map();
 let scheduledRefreshTimer = null;
 
+const CACHE_STATE_KEY = "cache";
+const OPENIPF_CACHE_STATE_KEY = "openipf-cache";
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -96,6 +99,14 @@ async function initializeOpenIpfOverrideStore() {
     connectionString: DATABASE_URL,
     ssl: getDatabaseSslConfig()
   });
+
+  await overridePool.query(`
+    CREATE TABLE IF NOT EXISTS app_state (
+      state_key TEXT PRIMARY KEY,
+      payload JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
 
   await overridePool.query(`
     CREATE TABLE IF NOT EXISTS openipf_overrides (
@@ -309,12 +320,59 @@ function scheduleCacheRefresh() {
   }
 }
 
+async function saveAppState(stateKey, payload) {
+  if (!overridePool) {
+    return false;
+  }
+
+  await overridePool.query(
+    `
+      INSERT INTO app_state (state_key, payload, updated_at)
+      VALUES ($1, $2::jsonb, NOW())
+      ON CONFLICT (state_key)
+      DO UPDATE SET
+        payload = EXCLUDED.payload,
+        updated_at = NOW()
+    `,
+    [stateKey, JSON.stringify(payload)]
+  );
+
+  return true;
+}
+
+async function loadAppState(stateKey) {
+  if (!overridePool) {
+    return null;
+  }
+
+  const result = await overridePool.query(
+    `
+      SELECT payload
+      FROM app_state
+      WHERE state_key = $1
+    `,
+    [stateKey]
+  );
+
+  return result.rows[0]?.payload || null;
+}
+
 async function saveCache() {
+  const savedToDatabase = await saveAppState(CACHE_STATE_KEY, cache);
+  if (savedToDatabase) {
+    return;
+  }
+
   await fs.mkdir(path.dirname(CACHE_FILE), { recursive: true });
   await fs.writeFile(CACHE_FILE, JSON.stringify(cache, null, 2));
 }
 
 async function saveOpenIpfCache() {
+  const savedToDatabase = await saveAppState(OPENIPF_CACHE_STATE_KEY, openIpfCache);
+  if (savedToDatabase) {
+    return;
+  }
+
   await fs.mkdir(path.dirname(OPENIPF_CACHE_FILE), { recursive: true });
   await fs.writeFile(OPENIPF_CACHE_FILE, JSON.stringify(openIpfCache, null, 2));
 }
@@ -371,6 +429,26 @@ function setOpenIpfOverride(name, club, override) {
 }
 
 async function loadCache() {
+  const storedCache = await loadAppState(CACHE_STATE_KEY);
+  if (storedCache) {
+    cache = {
+      updatedAt: storedCache.updatedAt || null,
+      classes: {
+        ...createEmptyClassMap(),
+        ...(storedCache.classes || {})
+      }
+    };
+    return;
+  }
+
+  if (overridePool) {
+    cache = {
+      updatedAt: null,
+      classes: createEmptyClassMap()
+    };
+    return;
+  }
+
   try {
     const raw = await fs.readFile(CACHE_FILE, "utf8");
     const parsed = JSON.parse(raw);
@@ -394,6 +472,17 @@ async function loadCache() {
 }
 
 async function loadOpenIpfCache() {
+  const storedCache = await loadAppState(OPENIPF_CACHE_STATE_KEY);
+  if (storedCache) {
+    openIpfCache = storedCache;
+    return;
+  }
+
+  if (overridePool) {
+    openIpfCache = {};
+    return;
+  }
+
   try {
     const raw = await fs.readFile(OPENIPF_CACHE_FILE, "utf8");
     openIpfCache = JSON.parse(raw);
@@ -1048,9 +1137,9 @@ app.use((error, _request, response, _next) => {
 });
 
 async function start() {
+  await initializeOpenIpfOverrideStore();
   await loadCache();
   await loadOpenIpfCache();
-  await initializeOpenIpfOverrideStore();
   await loadOpenIpfOverrides();
 
   if (process.argv.includes("--refresh-only")) {

@@ -19,13 +19,15 @@ The Sport80 lifter list is refreshed automatically every 12 hours while the serv
 
 ## Persistent override storage
 
-The app now supports persistent OpenIPF override storage through Postgres.
+The app now supports persistent storage through Postgres.
 
-- If `DATABASE_URL` is unset, overrides continue to use `data/openipf-overrides.json` for local development.
-- If `DATABASE_URL` is set, the app stores manual OpenIPF URL overrides and disambiguation selections in a Postgres table named `openipf_overrides`.
+- If `DATABASE_URL` is unset, the app continues to use the local JSON files in `data/` for local development.
+- If `DATABASE_URL` is set, the app stores the main entry cache, the OpenIPF cache, and manual OpenIPF overrides in Postgres.
 - If your database provider requires TLS, set `DATABASE_SSL_MODE=require`.
 
-This is the recommended setup for deploying to Render without losing manual overrides when the service restarts.
+When `DATABASE_URL` is set, the deployed app does not fall back to local cache files. All persisted state comes from Postgres.
+
+This is the recommended setup for deploying to Render without losing manual overrides or forcing a full cache rebuild when the service restarts.
 
 ## Run it
 
